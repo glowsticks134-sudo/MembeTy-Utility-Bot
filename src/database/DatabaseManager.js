@@ -5,6 +5,7 @@ import { Premium } from "#db/Premium";
 import { Moderation } from "#db/Moderation";
 import { Ticket } from "#db/Ticket";
 import { Invites } from "#db/Invites";
+import { Settings } from "#db/Settings";
 import { logger } from "#utils/logger";
 
 export class DatabaseManager {
@@ -21,6 +22,7 @@ export class DatabaseManager {
       this.moderation = new Moderation();
       this.ticket = new Ticket();
       this.invites = new Invites();
+      this.settings = new Settings();
       logger.success("DatabaseManager", "All databases initialized successfully");
     } catch (error) {
       logger.error("DatabaseManager", "Failed to initialize databases", error);
@@ -37,6 +39,7 @@ export class DatabaseManager {
       this.moderation.close();
       this.ticket.close();
       this.invites.close();
+      this.settings.close();
       logger.info("DatabaseManager", "All database connections closed");
     } catch (error) {
       logger.error("DatabaseManager", "Failed to close database connections", error);
@@ -140,6 +143,42 @@ export class DatabaseManager {
   getEligibleInviteRanks(guildId, inviteCount) { return this.invites.getEligibleRanks(guildId, inviteCount); }
   getInviteLeaderboard(guildId, limit = 10) { return this.invites.getLeaderboard(guildId, limit); }
   importMemberInvites(guildId, userId, uses) { return this.invites.importInvites(guildId, userId, uses); }
+
+  // ─── Settings ─────────────────────────────────────────────────────────────────
+  getGuildSettings(guildId) { return this.settings.getSettings(guildId); }
+  getAutorole(guildId) { return this.settings.getAutorole(guildId); }
+  setAutorole(guildId, roleId) { return this.settings.setAutorole(guildId, roleId); }
+  clearAutorole(guildId) { return this.settings.clearAutorole(guildId); }
+  getWelcome(guildId) { return this.settings.getWelcome(guildId); }
+  setWelcome(guildId, channelId, message) { return this.settings.setWelcome(guildId, channelId, message); }
+  clearWelcome(guildId) { return this.settings.clearWelcome(guildId); }
+  getGoodbye(guildId) { return this.settings.getGoodbye(guildId); }
+  setGoodbye(guildId, channelId, message) { return this.settings.setGoodbye(guildId, channelId, message); }
+  clearGoodbye(guildId) { return this.settings.clearGoodbye(guildId); }
+  getBoost(guildId) { return this.settings.getBoost(guildId); }
+  setBoost(guildId, channelId, message) { return this.settings.setBoost(guildId, channelId, message); }
+  getModlog(guildId) { return this.settings.getModlog(guildId); }
+  setModlog(guildId, channelId) { return this.settings.setModlog(guildId, channelId); }
+  clearModlog(guildId) { return this.settings.clearModlog(guildId); }
+  getJoinlog(guildId) { return this.settings.getJoinlog(guildId); }
+  setJoinlog(guildId, channelId) { return this.settings.setJoinlog(guildId, channelId); }
+  clearJoinlog(guildId) { return this.settings.clearJoinlog(guildId); }
+  addSelfrole(guildId, roleId) { return this.settings.addSelfrole(guildId, roleId); }
+  removeSelfrole(guildId, roleId) { return this.settings.removeSelfrole(guildId, roleId); }
+  getSelfroles(guildId) { return this.settings.getSelfroles(guildId); }
+  isSelfrole(guildId, roleId) { return this.settings.isSelfrole(guildId, roleId); }
+  setAutoping(guildId, channelId, roleId) { return this.settings.setAutoping(guildId, channelId, roleId); }
+  removeAutoping(guildId, channelId) { return this.settings.removeAutoping(guildId, channelId); }
+  getAutoping(guildId, channelId) { return this.settings.getAutoping(guildId, channelId); }
+  getAllAutopings(guildId) { return this.settings.getAllAutopings(guildId); }
+  addAutopublish(guildId, channelId) { return this.settings.addAutopublish(guildId, channelId); }
+  removeAutopublish(guildId, channelId) { return this.settings.removeAutopublish(guildId, channelId); }
+  getAutopublishChannels(guildId) { return this.settings.getAutopublishChannels(guildId); }
+  isAutopublish(guildId, channelId) { return this.settings.isAutopublish(guildId, channelId); }
+  addNote(guildId, userId, moderatorId, note) { return this.settings.addNote(guildId, userId, moderatorId, note); }
+  getNotes(guildId, userId) { return this.settings.getNotes(guildId, userId); }
+  deleteNote(id, guildId) { return this.settings.deleteNote(id, guildId); }
+  clearNotes(guildId, userId) { return this.settings.clearNotes(guildId, userId); }
 }
 
 export const db = new DatabaseManager();

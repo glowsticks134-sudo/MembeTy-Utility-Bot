@@ -47,6 +47,29 @@ npm run start     # Production (node src/shard.js)
 npm run dev       # Dev with auto-restart (node --watch src/shard.js)
 ```
 
+## New Commands Added (Big-Server Update)
+
+### Admin (10 commands)
+`autorole`, `welcome`, `goodbye`, `modlog`, `joinlog`, `boostmsg`, `massrole`, `selfrole`, `autopingsetup`, `autopublish`
+
+### Moderation (14 commands)
+`softban`, `timeout`, `untimeout`, `voicekick`, `voicemove`, `massban`, `slowmode`, `announce`, `giverole`, `removerole`, `deafen`, `undeafen`, `note`, `lockdown`
+
+### Utility (11 commands)
+`poll`, `timestamp`, `membercount`, `channelinfo`, `rolemembers`, `permissions`, `inviteinfo`, `firstmessage`, `serverroles`, `color`, `calculator`
+
+### Fun (11 commands)
+`8ball`, `coinflip`, `rps`, `roast`, `compliment`, `ship`, `wouldyourather`, `riddle`, `roll`, `joke`, `trivia`
+
+### New Event Handlers
+- `guildMemberAdd` — autorole, welcome message, join log (plus existing invite tracking)
+- `guildMemberRemove` — goodbye message, leave log
+- `guildMemberUpdate` — boost message when a member starts boosting
+- `autopublishAutoping` (messageCreate) — auto-publishes announcement channel messages, sends and deletes role pings
+
+### Settings Database
+`src/database/repo/Settings.js` — guild-level config for all the above features (SQLite, `settings.bread`).
+
 ## Deployment
 
 - **Type:** VM (always-on — required for a persistent Discord bot)
