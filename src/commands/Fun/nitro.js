@@ -10,6 +10,8 @@ class NitroCommand extends Command {
       category: "Fun",
       examples: ["nitro"],
       cooldown: 10,
+      enabledSlash: true,
+      slashData: { name: "nitro", description: "Generate a fake nitro gift (just for fun!)" },
     });
   }
 
@@ -20,6 +22,11 @@ class NitroCommand extends Command {
     } catch (error) {
       client.logger?.error("NitroCommand", `Error: ${error.message}`, error);
     }
+  }
+
+  async slashExecute({ client, interaction }) {
+    const fakeCode = this._generateFakeCode();
+    await interaction.reply(`https://discord.gift/${fakeCode}`);
   }
 
   _generateFakeCode() {

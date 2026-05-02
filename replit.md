@@ -47,28 +47,32 @@ npm run start     # Production (node src/shard.js)
 npm run dev       # Dev with auto-restart (node --watch src/shard.js)
 ```
 
-## New Commands Added (Big-Server Update)
+## Commands — Full Slash + Prefix Coverage
+
+All **121 commands** across moderation, Fun, and utility categories now have both prefix AND slash support (`enabledSlash: true`, `slashData`, and `slashExecute`).
 
 ### Admin (10 commands)
 `autorole`, `welcome`, `goodbye`, `modlog`, `joinlog`, `boostmsg`, `massrole`, `selfrole`, `autopingsetup`, `autopublish`
+Admin extras: `starboard`, `counting`, `setlog`, `reactrole`, `tempchannel`
 
-### Moderation (14 commands)
-`softban`, `timeout`, `untimeout`, `voicekick`, `voicemove`, `massban`, `slowmode`, `announce`, `giverole`, `removerole`, `deafen`, `undeafen`, `note`, `lockdown`
+### Moderation (41 commands)
+`softban`, `timeout`, `untimeout`, `voicekick`, `voicemove`, `massban`, `slowmode`, `announce`, `giverole`, `removerole`, `deafen`, `undeafen`, `note`, `lockdown`, `warninfo`, `warnreset`, `muteinfo`, `mutereset`, `purgebots`, `remindinfo`, `remindreset`, `steal`, `stealsticker`, `unbanall`, `unhideall`, `unlockall`, `list`, and more
 
-### Utility (11 commands)
-`poll`, `timestamp`, `membercount`, `channelinfo`, `rolemembers`, `permissions`, `inviteinfo`, `firstmessage`, `serverroles`, `color`, `calculator`
+### Utility (37 commands)
+`poll`, `timestamp`, `membercount`, `channelinfo`, `rolemembers`, `permissions`, `inviteinfo`, `firstmessage`, `serverroles`, `color`, `calculator`, `base64`, `binary`, `reverse`, `emojis`, `stickers`, `choose`, `password`, `uuid`, `charcount`, `urban`, `time`, `randomnum`, `boosts`, `uptime`, `botperms`, and more
 
-### Fun (11 commands)
-`8ball`, `coinflip`, `rps`, `roast`, `compliment`, `ship`, `wouldyourather`, `riddle`, `roll`, `joke`, `trivia`
+### Fun (43 commands)
+`8ball`, `coinflip`, `rps`, `roast`, `compliment`, `ship`, `wouldyourather`, `riddle`, `roll`, `joke`, `trivia`, `hug`, `pat`, `bonk`, `slap`, `poke`, `dadjoke`, `fact`, `quote`, `roulette`, `mock`, `iq`, `neverhaveiever`, `clap`, `highfive`, `cat`, `dog`, `bite`, `wave`, `feed`, `fortune`, `nitro`, `pickup`, `texttoemoji`, `howdumb`, `howgay`, `simprate`, `kill`, `lick`, `hack`, and more
 
-### New Event Handlers
-- `guildMemberAdd` — autorole, welcome message, join log (plus existing invite tracking)
+### Event Handlers
+- `guildMemberAdd` — autorole, welcome message, join log + invite tracking
 - `guildMemberRemove` — goodbye message, leave log
 - `guildMemberUpdate` — boost message when a member starts boosting
-- `autopublishAutoping` (messageCreate) — auto-publishes announcement channel messages, sends and deletes role pings
+- `autopublishAutoping` (messageCreate) — auto-publish, auto-ping, **counting channel** (validate number sequence, reset on mistake)
+- `starboard` (messageReactionAdd) — repost ⭐-reacted messages to a designated starboard channel
 
-### Settings Database
-`src/database/repo/Settings.js` — guild-level config for all the above features (SQLite, `settings.bread`).
+### Settings Database Tables
+`src/database/repo/Settings.js` — SQLite (`settings.bread`) tables: `guild_settings`, `selfroles`, `autopings`, `autopublish_channels`, `user_notes`, `guild_logs`, `starboard`, `counting`.
 
 ## Deployment
 

@@ -62,6 +62,12 @@ class TextToEmojiCommand extends Command {
       category: "Fun",
       examples: ["texttoemoji hello", "tte hi there"],
       cooldown: 5,
+      enabledSlash: true,
+      slashData: {
+        name: "texttoemoji",
+        description: "Convert text to emoji letters",
+        options: [{ name: "text", description: "Text to convert (max 50 chars)", type: 3, required: true }],
+      },
     });
   }
 
@@ -122,6 +128,16 @@ class TextToEmojiCommand extends Command {
         content: `${emoji.get("cross")} An error occurred.`,
       });
     }
+  }
+
+  async slashExecute({ client, interaction }) {
+    const text = interaction.options.getString("text").toLowerCase();
+    if (text.length > 50) return interaction.reply({ content: `${emoji.get("cross")} Text is too long! Max 50 characters.`, ephemeral: true });
+    let emojiText = "";
+    for (const char of text) {
+      emojiText += (emojiMap[char] || char) + " ";
+    }
+    await interaction.reply({ content: `**Original:** ${text}\n\n**Emojified:**\n${emojiText.trim()}` });
   }
 }
 

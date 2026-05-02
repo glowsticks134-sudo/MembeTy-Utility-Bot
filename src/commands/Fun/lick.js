@@ -28,6 +28,12 @@ class LickCommand extends Command {
       category: "Fun",
       examples: ["lick @user"],
       cooldown: 5,
+      enabledSlash: true,
+      slashData: {
+        name: "lick",
+        description: "Lick someone (anime style!)",
+        options: [{ name: "user", description: "Target user", type: 6, required: true }],
+      },
     });
   }
 
@@ -88,6 +94,13 @@ class LickCommand extends Command {
         content: `${emoji.get("cross")} An error occurred.`,
       });
     }
+  }
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getMember("user");
+    if (!target) return interaction.reply({ content: "User not found.", ephemeral: true });
+    if (target.id === interaction.user.id) return interaction.reply({ content: "You can't lick yourself... or can you? 👅", ephemeral: true });
+    await interaction.reply({ content: `${emoji.get("heart")} **${interaction.user.username}** licked **${target.user.username}**! 👅` });
   }
 }
 

@@ -18,6 +18,12 @@ export default {
   category: "moderation",
   cooldown: 3,
   userPermissions: [PermissionFlagsBits.ModerateMembers],
+  enabledSlash: true,
+  slashData: {
+    name: "warninfo",
+    description: "View warning history for a user",
+    options: [{ name: "user", description: "User to check warnings for", type: 6, required: true }],
+  },
 
   async execute({ client, message, args }) {
     if (!args[0]) {
@@ -93,6 +99,23 @@ export default {
         .setDescription(`Failed to get warn info: ${error.message}`);
 
       return message.reply({ embeds: [embed] });
+    }
+  },
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getUser("user");
+    if (!target) return interaction.reply({ content: "User not found.", ephemeral: true });
+    try {
+      const warns = db.getWarns(interaction.guild.id, target.id);
+      if (warns.length === 0) {
+        return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("info")} No Warnings`).setDescription(`${target.tag} has no warnings.`)], ephemeral: true });
+      }
+      let content = `**User:** ${target.tag}\n**Total:** ${warns.length}\n\n`;
+      warns.slice(0, 5).forEach((w, i) => { content += `**#${i + 1}** — ${w.reason} (<t:${Math.floor(new Date(w.warned_at).getTime() / 1000)}:R>)\n`; });
+      if (warns.length > 5) content += `*...and ${warns.length - 5} more*`;
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("warn")} Warning History`).setDescription(content)], ephemeral: true });
+    } catch (e) {
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("cross")} Error`).setDescription(e.message)], ephemeral: true });
     }
   },
 };

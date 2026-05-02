@@ -18,6 +18,8 @@ export default {
   cooldown: 10,
   userPermissions: [PermissionFlagsBits.ManageChannels],
   permissions: [PermissionFlagsBits.ManageChannels],
+  enabledSlash: true,
+  slashData: { name: "unhideall", description: "Unhide all channels in this server" },
 
   async execute({ client, message, args }) {
     try {
@@ -58,5 +60,14 @@ export default {
 
       return message.reply({ embeds: [embed] });
     }
+  },
+
+  async slashExecute({ client, interaction }) {
+    await interaction.deferReply();
+    let count = 0;
+    for (const [, ch] of interaction.guild.channels.cache) {
+      await ch.permissionOverwrites.edit(interaction.guild.roles.everyone, { ViewChannel: true }).then(() => count++).catch(() => {});
+    }
+    return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("unhide")} All Channels Unhidden`).setDescription(`**Channels Unhidden:** ${count}`)] });
   },
 };

@@ -53,6 +53,12 @@ class PickupCommand extends Command {
       category: "Fun",
       examples: ["pickup", "pickup @user"],
       cooldown: 5,
+      enabledSlash: true,
+      slashData: {
+        name: "pickup",
+        description: "Get a random pickup line",
+        options: [{ name: "user", description: "Target user to flirt with", type: 6, required: false }],
+      },
     });
   }
 
@@ -112,6 +118,15 @@ class PickupCommand extends Command {
         content: `${emoji.get("cross")} An error occurred.`,
       });
     }
+  }
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getMember("user");
+    const line = pickupLines[Math.floor(Math.random() * pickupLines.length)];
+    const content = target
+      ? `**${interaction.user.username}** says to **${target.user.username}**:\n\n*"${line}"*`
+      : `**${interaction.user.username}** uses a pickup line:\n\n*"${line}"*`;
+    await interaction.reply({ content });
   }
 }
 

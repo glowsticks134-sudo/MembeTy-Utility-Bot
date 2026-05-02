@@ -16,6 +16,8 @@ export default {
   aliases: ["rreset", "clearreminders"],
   category: "moderation",
   cooldown: 5,
+  enabledSlash: true,
+  slashData: { name: "remindreset", description: "Clear all your active reminders" },
 
   async execute({ client, message, args }) {
     try {
@@ -56,5 +58,12 @@ export default {
 
       return message.reply({ embeds: [embed] });
     }
+  },
+
+  async slashExecute({ client, interaction }) {
+    const reminders = db.getReminders(interaction.user.id);
+    if (!reminders.length) return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("info")} No Reminders`).setDescription("You have no reminders to clear.")], ephemeral: true });
+    db.resetReminds(interaction.user.id);
+    return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("reset")} Reminders Cleared`).setDescription(`Cleared **${reminders.length}** reminder(s).`)], ephemeral: true });
   },
 };

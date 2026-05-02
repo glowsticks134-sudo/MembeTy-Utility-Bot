@@ -17,6 +17,25 @@ export default {
   category: "moderation",
   cooldown: 3,
   userPermissions: [PermissionFlagsBits.ManageGuild],
+  enabledSlash: true,
+  slashData: {
+    name: "list",
+    description: "List admins, bots, users in a role, or bans",
+    options: [
+      {
+        name: "type",
+        description: "What to list",
+        type: 3,
+        required: true,
+        choices: [
+          { name: "Admins", value: "admin" },
+          { name: "Bots", value: "bot" },
+          { name: "Bans", value: "ban" },
+        ],
+      },
+      { name: "role", description: "Role to list members of (for 'inrole' type)", type: 8, required: false },
+    ],
+  },
 
   async execute({ client, message, args }) {
     if (!args[0]) {
@@ -194,6 +213,30 @@ export default {
         .setDescription(`Failed to fetch list: ${error.message}`);
 
       return message.reply({ embeds: [embed] });
+    }
+  },
+
+  async slashExecute({ client, interaction }) {
+    const type = interaction.options.getString("type");
+    let listItems = [], title = "";
+    try {
+      if (type === "admin") {
+        const admins = interaction.guild.members.cache.filter(m => m.permissions.has(PermissionFlagsBits.Administrator));
+        listItems = admins.map(m => `${m.user.tag}`);
+        title = "Administrators";
+      } else if (type === "bot") {
+        const bots = interaction.guild.members.cache.filter(m => m.user.bot);
+        listItems = bots.map(m => `${m.user.tag}`);
+        title = "Bots";
+      } else if (type === "ban") {
+        const bans = await interaction.guild.bans.fetch();
+        listItems = bans.map(b => `${b.user.tag}`);
+        title = "Banned Users";
+      }
+      const desc = listItems.slice(0, 30).join("\n") || "None found.";
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`📋 ${title} (${listItems.length})`).setDescription(desc + (listItems.length > 30 ? `\n*...and ${listItems.length - 30} more*` : ""))], ephemeral: true });
+    } catch (e) {
+      return interaction.reply({ content: `Error: ${e.message}`, ephemeral: true });
     }
   },
 };

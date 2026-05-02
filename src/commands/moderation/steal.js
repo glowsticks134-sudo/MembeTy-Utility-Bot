@@ -18,6 +18,15 @@ export default {
   cooldown: 5,
   userPermissions: [PermissionFlagsBits.ManageGuildExpressions],
   permissions: [PermissionFlagsBits.ManageGuildExpressions],
+  enabledSlash: true,
+  slashData: {
+    name: "steal",
+    description: "Steal a custom emoji into this server",
+    options: [
+      { name: "emoji", description: "Custom emoji (paste it here)", type: 3, required: true },
+      { name: "name", description: "New name for the emoji", type: 3, required: false },
+    ],
+  },
 
   async execute({ client, message, args }) {
     if (!args[0]) {
@@ -79,6 +88,24 @@ export default {
         .setDescription(`Failed to steal the emoji: ${error.message}`);
 
       return message.reply({ embeds: [embed] });
+    }
+  },
+
+  async slashExecute({ client, interaction }) {
+    const input = interaction.options.getString("emoji");
+    const emojiRegex = /<?(a)?:?(\w{2,32}):(\d{17,19})>?/;
+    const match = input.match(emojiRegex);
+    if (!match) return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("cross")} Invalid Emoji`).setDescription("Please provide a valid custom emoji.")], ephemeral: true });
+    const animated = match[1] === "a";
+    const emojiName = interaction.options.getString("name") || match[2];
+    const emojiId = match[3];
+    const url = `https://cdn.discordapp.com/emojis/${emojiId}.${animated ? "gif" : "png"}`;
+    await interaction.deferReply();
+    try {
+      const newEmoji = await interaction.guild.emojis.create({ attachment: url, name: emojiName });
+      return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("steal")} Emoji Stolen`).setDescription(`${newEmoji} \`${newEmoji.name}\` has been added to this server!`)] });
+    } catch (e) {
+      return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("cross")} Failed`).setDescription(e.message)] });
     }
   },
 };

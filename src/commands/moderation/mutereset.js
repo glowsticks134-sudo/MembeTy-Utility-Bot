@@ -18,6 +18,12 @@ export default {
   category: "moderation",
   cooldown: 5,
   userPermissions: [PermissionFlagsBits.Administrator],
+  enabledSlash: true,
+  slashData: {
+    name: "mutereset",
+    description: "Reset mute history for a user",
+    options: [{ name: "user", description: "User to clear mutes for", type: 6, required: true }],
+  },
 
   async execute({ client, message, args }) {
     if (!args[0]) {
@@ -80,5 +86,14 @@ export default {
 
       return message.reply({ embeds: [embed] });
     }
+  },
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getUser("user");
+    if (!target) return interaction.reply({ content: "User not found.", ephemeral: true });
+    const mutes = db.getMuteHistory(interaction.guild.id, target.id);
+    if (!mutes.length) return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("info")} No Mutes`).setDescription(`${target.tag} has no mute history.`)], ephemeral: true });
+    db.resetMutes(interaction.guild.id, target.id);
+    return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("reset")} Mute History Reset`).setDescription(`Cleared **${mutes.length}** mute(s) for ${target.tag}.`)] });
   },
 };

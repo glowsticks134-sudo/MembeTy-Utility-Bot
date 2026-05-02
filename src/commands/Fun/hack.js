@@ -82,6 +82,12 @@ class HackCommand extends Command {
       category: "Fun",
       examples: ["hack @user"],
       cooldown: 10,
+      enabledSlash: true,
+      slashData: {
+        name: "hack",
+        description: "Pretend to hack a user (just for fun!)",
+        options: [{ name: "user", description: "Target user to hack", type: 6, required: true }],
+      },
     });
   }
 
@@ -176,6 +182,29 @@ class HackCommand extends Command {
         content: `${emoji.get("cross")} An error occurred while "hacking".`,
       });
     }
+  }
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getMember("user");
+    if (!target) return interaction.reply({ content: "User not found.", ephemeral: true });
+    await interaction.deferReply();
+    const stages = [
+      `🔓 Accessing **${target.user.username}**'s account...`,
+      `🔑 Bypassing 2FA...`,
+      `📡 Downloading IP address...`,
+      `💾 Retrieving password database...`,
+      `✅ **Hack complete!** ${target.user.username}'s data has been stolen! (not really 😄)`,
+    ];
+    let i = 0;
+    await interaction.editReply({ content: stages[i] });
+    const interval = setInterval(async () => {
+      i++;
+      if (i < stages.length) {
+        await interaction.editReply({ content: stages[i] }).catch(() => {});
+      } else {
+        clearInterval(interval);
+      }
+    }, 1500);
   }
 }
 

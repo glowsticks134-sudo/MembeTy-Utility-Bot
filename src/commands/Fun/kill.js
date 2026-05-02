@@ -48,6 +48,12 @@ class KillCommand extends Command {
       category: "Fun",
       examples: ["kill @user"],
       cooldown: 5,
+      enabledSlash: true,
+      slashData: {
+        name: "kill",
+        description: "Virtually eliminate someone (just for fun!)",
+        options: [{ name: "user", description: "Target user", type: 6, required: true }],
+      },
     });
   }
 
@@ -116,6 +122,16 @@ class KillCommand extends Command {
         content: `${emoji.get("cross")} An error occurred.`,
       });
     }
+  }
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getMember("user");
+    if (!target) return interaction.reply({ content: "User not found.", ephemeral: true });
+    if (target.id === interaction.user.id) return interaction.reply({ content: "You can't kill yourself!", ephemeral: true });
+    const randomMessage = killMessages[Math.floor(Math.random() * killMessages.length)]
+      .replace("{killer}", `**${interaction.user.username}**`)
+      .replace("{victim}", `**${target.user.username}**`);
+    await interaction.reply({ content: `💀 ${randomMessage}\n\n*RIP ${target.user.username}. Press F to pay respects.*` });
   }
 }
 

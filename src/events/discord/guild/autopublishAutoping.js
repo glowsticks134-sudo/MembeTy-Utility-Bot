@@ -35,5 +35,32 @@ export default {
     } catch (e) {
       logger.error("AutoPing", e.message);
     }
+
+    // ─── Counting ──────────────────────────────────────────────────────────────
+    try {
+      const counting = db.getCounting(guildId);
+      if (counting && counting.channel_id === message.channel.id) {
+        const num = parseInt(message.content.trim());
+        const expected = (counting.current_count || 0) + 1;
+        if (isNaN(num) || num !== expected || counting.last_user_id === message.author.id) {
+          await message.delete().catch(() => {});
+          if (counting.last_user_id === message.author.id) {
+            await message.channel.send(`❌ **${message.author.username}**, you can't count twice in a row! Count resets to **0**.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+          } else {
+            await message.channel.send(`❌ **${message.author.username}** ruined it! The next number was **${expected}**. Count resets to **0**.`).then(m => setTimeout(() => m.delete().catch(() => {}), 5000));
+          }
+          db.settings.updateCount(guildId, 0, null);
+        } else {
+          db.settings.updateCount(guildId, num, message.author.id);
+          if (num % 100 === 0) {
+            await message.react("🎉").catch(() => {});
+          } else {
+            await message.react("✅").catch(() => {});
+          }
+        }
+      }
+    } catch (e) {
+      logger.error("Counting", e.message);
+    }
   },
 };

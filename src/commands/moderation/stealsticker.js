@@ -19,6 +19,12 @@ export default {
   cooldown: 5,
   userPermissions: [PermissionFlagsBits.ManageGuildExpressions],
   permissions: [PermissionFlagsBits.ManageGuildExpressions],
+  enabledSlash: true,
+  slashData: {
+    name: "stealsticker",
+    description: "Add a sticker from another message to this server",
+    options: [{ name: "message_id", description: "ID of a message that contains a sticker", type: 3, required: true }],
+  },
 
   async execute({ client, message, args }) {
     if (!message.reference) {
@@ -84,6 +90,21 @@ export default {
         );
 
       return message.reply({ embeds: [embed] });
+    }
+  },
+
+  async slashExecute({ client, interaction }) {
+    const msgId = interaction.options.getString("message_id");
+    await interaction.deferReply();
+    const msg = await interaction.channel.messages.fetch(msgId).catch(() => null);
+    if (!msg) return interaction.editReply({ content: "Message not found in this channel." });
+    const sticker = msg.stickers?.first();
+    if (!sticker) return interaction.editReply({ content: "That message doesn't have a sticker." });
+    try {
+      const newSticker = await interaction.guild.stickers.create({ file: sticker.url, name: sticker.name, tags: "fun" });
+      return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("sticker")} Sticker Added`).setDescription(`**${newSticker.name}** has been added to this server!`)] });
+    } catch (e) {
+      return interaction.editReply({ content: `Failed to add sticker: ${e.message}` });
     }
   },
 };

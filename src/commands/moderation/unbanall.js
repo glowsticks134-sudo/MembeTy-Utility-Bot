@@ -18,6 +18,8 @@ export default {
   cooldown: 30,
   userPermissions: [PermissionFlagsBits.Administrator],
   permissions: [PermissionFlagsBits.BanMembers],
+  enabledSlash: true,
+  slashData: { name: "unbanall", description: "Unban all banned users from this server" },
 
   async execute({ client, message, args }) {
     try {
@@ -76,5 +78,16 @@ export default {
 
       return message.reply({ embeds: [embed] });
     }
+  },
+
+  async slashExecute({ client, interaction }) {
+    await interaction.deferReply();
+    const bans = await interaction.guild.bans.fetch();
+    if (!bans.size) return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("info")} No Bans`).setDescription("There are no banned users.")] });
+    let unbanned = 0, failed = 0;
+    for (const [id] of bans) {
+      await interaction.guild.members.unban(id).then(() => unbanned++).catch(() => failed++);
+    }
+    return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("unban")} Mass Unban Complete`).setDescription(`**Unbanned:** ${unbanned}\n**Failed:** ${failed}`)] });
   },
 };

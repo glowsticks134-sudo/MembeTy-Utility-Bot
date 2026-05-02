@@ -20,6 +20,12 @@ class HowDumbCommand extends Command {
       category: "Fun",
       examples: ["howdumb", "howdumb @user"],
       cooldown: 5,
+      enabledSlash: true,
+      slashData: {
+        name: "howdumb",
+        description: "Check how dumb someone is",
+        options: [{ name: "user", description: "Target user", type: 6, required: false }],
+      },
     });
   }
 
@@ -99,6 +105,13 @@ class HowDumbCommand extends Command {
         content: `${emoji.get("cross")} An error occurred.`,
       });
     }
+  }
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getMember("user") || interaction.member;
+    const pct = Math.floor(Math.random() * 101);
+    const bar = this._createProgressBar(pct);
+    await interaction.reply({ content: `🧠 **${target.user.username}** is **${pct}% dumb**\n${bar}`, ephemeral: false });
   }
 
   _createProgressBar(percent) {

@@ -18,6 +18,12 @@ export default {
   category: "moderation",
   cooldown: 3,
   userPermissions: [PermissionFlagsBits.ModerateMembers],
+  enabledSlash: true,
+  slashData: {
+    name: "muteinfo",
+    description: "View mute history for a user",
+    options: [{ name: "user", description: "User to check mutes for", type: 6, required: true }],
+  },
 
   async execute({ client, message, args }) {
     if (!args[0]) {
@@ -93,6 +99,20 @@ export default {
         .setDescription(`Failed to get mute info: ${error.message}`);
 
       return message.reply({ embeds: [embed] });
+    }
+  },
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getUser("user");
+    if (!target) return interaction.reply({ content: "User not found.", ephemeral: true });
+    try {
+      const mutes = db.getMuteHistory(interaction.guild.id, target.id);
+      if (mutes.length === 0) return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("info")} No Mutes`).setDescription(`${target.tag} has no mute history.`)], ephemeral: true });
+      let content = `**User:** ${target.tag}\n**Total:** ${mutes.length}\n\n`;
+      mutes.slice(0, 5).forEach((m, i) => { content += `**#${i + 1}** — ${m.reason} (<t:${Math.floor(new Date(m.muted_at).getTime() / 1000)}:R>)\n`; });
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("mute")} Mute History`).setDescription(content)], ephemeral: true });
+    } catch (e) {
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("cross")} Error`).setDescription(e.message)], ephemeral: true });
     }
   },
 };

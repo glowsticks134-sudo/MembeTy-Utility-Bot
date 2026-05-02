@@ -19,6 +19,8 @@ export default {
   cooldown: 30,
   userPermissions: [PermissionFlagsBits.Administrator],
   permissions: [PermissionFlagsBits.ManageChannels],
+  enabledSlash: true,
+  slashData: { name: "unlockall", description: "Unlock all channels for everyone" },
 
   async execute({ client, message, args }) {
     try {
@@ -81,5 +83,15 @@ export default {
 
       return message.reply({ embeds: [embed] });
     }
+  },
+
+  async slashExecute({ client, interaction }) {
+    await interaction.deferReply();
+    let unlocked = 0, failed = 0;
+    const chans = interaction.guild.channels.cache.filter(c => c.type === 0 || c.type === 5);
+    for (const [, ch] of chans) {
+      await ch.permissionOverwrites.edit(interaction.guild.roles.everyone, { SendMessages: null }).then(() => unlocked++).catch(() => failed++);
+    }
+    return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("unlock")} All Channels Unlocked`).setDescription(`**Unlocked:** ${unlocked}\n**Failed:** ${failed}`)] });
   },
 };

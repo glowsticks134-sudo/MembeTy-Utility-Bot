@@ -63,6 +63,35 @@ export class Settings extends Database {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    this.exec(`
+      CREATE TABLE IF NOT EXISTS guild_logs (
+        guild_id TEXT NOT NULL,
+        log_type TEXT NOT NULL,
+        channel_id TEXT,
+        PRIMARY KEY (guild_id, log_type)
+      )
+    `);
+
+    this.exec(`
+      CREATE TABLE IF NOT EXISTS starboard (
+        guild_id TEXT PRIMARY KEY,
+        channel_id TEXT,
+        threshold INTEGER DEFAULT 3
+      )
+    `);
+
+    this.exec(`
+      CREATE TABLE IF NOT EXISTS counting (
+        guild_id TEXT PRIMARY KEY,
+        channel_id TEXT,
+        current_count INTEGER DEFAULT 0,
+        last_user_id TEXT
+      )
+    `);
+
+    // Migrate existing guild_settings table if needed
+    try { this.exec("ALTER TABLE guild_settings ADD COLUMN snipe_enabled INTEGER DEFAULT 1"); } catch {}
   }
 
   ensureGuild(guildId) {
@@ -189,5 +218,43 @@ export class Settings extends Database {
   }
   clearNotes(guildId, userId) {
     this.exec("DELETE FROM user_notes WHERE guild_id = ? AND user_id = ?", [guildId, userId]);
+  }
+
+  // Starboard
+  getStarboard(guildId) {
+    return this.get("SELECT * FROM starboard WHERE guild_id = ?", [guildId]);
+  }
+  setStarboard(guildId, channelId, threshold = 3) {
+    this.exec("INSERT OR REPLACE INTO starboard (guild_id, channel_id, threshold) VALUES (?, ?, ?)", [guildId, channelId, threshold]);
+  }
+
+  // Counting
+  getCounting(guildId) {
+    return this.get("SELECT * FROM counting WHERE guild_id = ?", [guildId]);
+  }
+  setCounting(guildId, channelId) {
+    if (!channelId) {
+      this.exec("DELETE FROM counting WHERE guild_id = ?", [guildId]);
+      return;
+    }
+    this.exec("INSERT OR REPLACE INTO counting (guild_id, channel_id, current_count, last_user_id) VALUES (?, ?, 0, NULL)", [guildId, channelId]);
+  }
+  updateCount(guildId, count, userId) {
+    this.exec("UPDATE counting SET current_count = ?, last_user_id = ? WHERE guild_id = ?", [count, userId, guildId]);
+  }
+
+  // Guild Logs
+  setLog(guildId, logType, channelId) {
+    if (!channelId) {
+      this.exec("DELETE FROM guild_logs WHERE guild_id = ? AND log_type = ?", [guildId, logType]);
+      return;
+    }
+    this.exec("INSERT OR REPLACE INTO guild_logs (guild_id, log_type, channel_id) VALUES (?, ?, ?)", [guildId, logType, channelId]);
+  }
+  getLog(guildId, logType) {
+    return this.get("SELECT channel_id FROM guild_logs WHERE guild_id = ? AND log_type = ?", [guildId, logType])?.channel_id || null;
+  }
+  getAllLogs(guildId) {
+    return this.all("SELECT log_type, channel_id FROM guild_logs WHERE guild_id = ?", [guildId]);
   }
 }

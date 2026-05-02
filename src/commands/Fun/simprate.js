@@ -20,6 +20,12 @@ class SimpRateCommand extends Command {
       category: "Fun",
       examples: ["simprate", "simprate @user"],
       cooldown: 5,
+      enabledSlash: true,
+      slashData: {
+        name: "simprate",
+        description: "Check someone's simp rate",
+        options: [{ name: "user", description: "Target user", type: 6, required: false }],
+      },
     });
   }
 
@@ -99,6 +105,13 @@ class SimpRateCommand extends Command {
         content: `${emoji.get("cross")} An error occurred.`,
       });
     }
+  }
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getMember("user") || interaction.member;
+    const pct = Math.floor(Math.random() * 101);
+    const bar = this._createProgressBar(pct);
+    await interaction.reply({ content: `💘 **${target.user.username}** is **${pct}% simp**\n${bar}`, ephemeral: false });
   }
 
   _createProgressBar(percent) {

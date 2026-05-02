@@ -20,6 +20,12 @@ class HowGayCommand extends Command {
       category: "Fun",
       examples: ["howgay", "howgay @user"],
       cooldown: 5,
+      enabledSlash: true,
+      slashData: {
+        name: "howgay",
+        description: "Check someone's gay rate",
+        options: [{ name: "user", description: "Target user", type: 6, required: false }],
+      },
     });
   }
 
@@ -79,6 +85,13 @@ class HowGayCommand extends Command {
         content: `${emoji.get("cross")} An error occurred.`,
       });
     }
+  }
+
+  async slashExecute({ client, interaction }) {
+    const target = interaction.options.getMember("user") || interaction.member;
+    const pct = Math.floor(Math.random() * 101);
+    const bar = this._createProgressBar(pct);
+    await interaction.reply({ content: `🌈 **${target.user.username}** is **${pct}% gay**\n${bar}`, ephemeral: false });
   }
 
   _createProgressBar(percent) {

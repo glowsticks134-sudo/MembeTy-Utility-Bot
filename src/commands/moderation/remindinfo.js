@@ -16,6 +16,8 @@ export default {
   aliases: ["rinfo", "reminders", "myreminders"],
   category: "moderation",
   cooldown: 3,
+  enabledSlash: true,
+  slashData: { name: "remindinfo", description: "View your active reminders" },
 
   async execute({ client, message, args }) {
     try {
@@ -68,5 +70,13 @@ export default {
 
       return message.reply({ embeds: [embed] });
     }
+  },
+
+  async slashExecute({ client, interaction }) {
+    const reminders = db.getReminders(interaction.user.id);
+    if (!reminders.length) return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("info")} No Reminders`).setDescription("You have no active reminders.")], ephemeral: true });
+    let content = "";
+    reminders.slice(0, 10).forEach((r, i) => { content += `**#${i + 1}** — ${r.message.slice(0, 50)} — <t:${Math.floor(r.remind_at / 1000)}:R>\n`; });
+    return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x000000).setTitle(`${emoji.get("remind")} Your Reminders`).setDescription(content)], ephemeral: true });
   },
 };

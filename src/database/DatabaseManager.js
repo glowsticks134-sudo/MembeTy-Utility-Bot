@@ -179,6 +179,20 @@ export class DatabaseManager {
   getNotes(guildId, userId) { return this.settings.getNotes(guildId, userId); }
   deleteNote(id, guildId) { return this.settings.deleteNote(id, guildId); }
   clearNotes(guildId, userId) { return this.settings.clearNotes(guildId, userId); }
+
+  // Starboard
+  getStarboard(guildId) { return this.settings.getStarboard(guildId); }
+  setStarboard(guildId, channelId, threshold) { return this.settings.setStarboard(guildId, channelId, threshold); }
+
+  // Counting
+  getCounting(guildId) { return this.settings.getCounting(guildId); }
+  setCounting(guildId, channelId) { return this.settings.setCounting(guildId, channelId); }
+  updateCount(guildId, count, userId) { return this.settings.updateCount(guildId, count, userId); }
+
+  // Guild Logs
+  setLog(guildId, logType, channelId) { return this.settings.setLog(guildId, logType, channelId); }
+  getLog(guildId, logType) { return this.settings.getLog(guildId, logType); }
+  getAllLogs(guildId) { return this.settings.getAllLogs(guildId); }
 }
 
 export const db = new DatabaseManager();
