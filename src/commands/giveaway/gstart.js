@@ -326,8 +326,33 @@ class GiveawayStartCommand extends Command {
       time: duration
     });
 
+    // Register this giveaway in the client store so management commands can access it
+    client.giveaways.set(message.id, {
+      prize,
+      winnersCount,
+      endTime,
+      host,
+      participants,
+      collector,
+      channelId: message.channelId,
+      guildId: message.guildId,
+      paused: false,
+      ended: false,
+      messageRef: message
+    });
+
     collector.on("collect", async (interaction) => {
       try {
+        const giveaway = client.giveaways.get(message.id);
+
+        // Reject entries if giveaway is paused
+        if (giveaway && giveaway.paused) {
+          return interaction.reply({
+            content: `${emoji.get("cross")} This giveaway is currently paused.`,
+            ephemeral: true
+          });
+        }
+
         if (participants.has(interaction.user.id)) {
           participants.delete(interaction.user.id);
           await interaction.reply({
@@ -342,10 +367,16 @@ class GiveawayStartCommand extends Command {
           });
         }
 
+        // Re-read prize/winnersCount from store in case they were edited
+        const current = client.giveaways.get(message.id);
+        const currentPrize = current ? current.prize : prize;
+        const currentWinnersCount = current ? current.winnersCount : winnersCount;
+        const currentEndTime = current ? current.endTime : endTime;
+
         const updatedContainer = this._createGiveawayContainer(
-          prize,
-          winnersCount,
-          endTime,
+          currentPrize,
+          currentWinnersCount,
+          currentEndTime,
           host,
           Array.from(participants)
         );
@@ -359,26 +390,29 @@ class GiveawayStartCommand extends Command {
       }
     });
 
-    collector.on("end", async () => {
+    collector.on("end", async (_, reason) => {
       try {
+        const giveaway = client.giveaways.get(message.id);
+
+        // Guard against double-end (e.g. natural expiry firing after a manual stop)
+        if (giveaway && giveaway.ended) return;
+
+        // Mark as ended immediately to prevent any concurrent double-end
+        if (giveaway) giveaway.ended = true;
+
         const participantArray = Array.from(participants);
-        let winners = [];
+        const currentPrize = giveaway ? giveaway.prize : prize;
+        const currentWinnersCount = giveaway ? giveaway.winnersCount : winnersCount;
 
-        if (participantArray.length > 0) {
-          const shuffled = participantArray.sort(() => Math.random() - 0.5);
-          const selectedWinners = shuffled.slice(0, Math.min(winnersCount, participantArray.length));
-          
-          for (const winnerId of selectedWinners) {
-            try {
-              const user = await client.users.fetch(winnerId);
-              winners.push(user.toString());
-            } catch {
-              winners.push(`<@${winnerId}>`);
-            }
-          }
-        }
+        // Store final participants for reroll
+        if (giveaway) giveaway.finalParticipants = participantArray;
 
-        const endedContainer = this._createEndedGiveawayContainer(prize, winnersCount, host, winners);
+        const winners = await this._pickWinners(participantArray, currentWinnersCount, client);
+
+        // Store last winners for reroll
+        if (giveaway) giveaway.lastWinners = winners;
+
+        const endedContainer = this._createEndedGiveawayContainer(currentPrize, currentWinnersCount, host, winners);
 
         await message.edit({
           components: [endedContainer],
@@ -387,17 +421,34 @@ class GiveawayStartCommand extends Command {
 
         if (winners.length > 0) {
           await message.reply({
-            content: `${emoji.get("tada")} Congratulations ${winners.join(", ")}! You won **${prize}**!`
+            content: `${emoji.get("tada")} Congratulations ${winners.join(", ")}! You won **${currentPrize}**!`
           });
         } else {
           await message.reply({
-            content: `${emoji.get("cross")} No one entered the giveaway for **${prize}**.`
+            content: `${emoji.get("cross")} No one entered the giveaway for **${currentPrize}**.`
           });
         }
       } catch (error) {
         logger.error("GiveawayStartCommand", "End collector error:", error);
       }
     });
+  }
+
+  async _pickWinners(participantArray, winnersCount, client) {
+    const winners = [];
+    if (participantArray.length > 0) {
+      const shuffled = [...participantArray].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, Math.min(winnersCount, participantArray.length));
+      for (const winnerId of selected) {
+        try {
+          const user = await client.users.fetch(winnerId);
+          winners.push(user.toString());
+        } catch {
+          winners.push(`<@${winnerId}>`);
+        }
+      }
+    }
+    return winners;
   }
 
   _formatDuration(ms) {

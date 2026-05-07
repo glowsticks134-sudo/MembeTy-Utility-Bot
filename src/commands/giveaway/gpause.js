@@ -28,30 +28,49 @@ class GiveawayPauseCommand extends Command {
     });
   }
 
+  _doPause(client, messageId) {
+    const giveaway = client.giveaways.get(messageId);
+
+    if (!giveaway) {
+      return { success: false, reason: "No active giveaway found with that message ID." };
+    }
+
+    if (giveaway.ended) {
+      return { success: false, reason: "This giveaway has already ended." };
+    }
+
+    if (giveaway.paused) {
+      return { success: false, reason: "This giveaway is already paused. Use `gresume` to resume it." };
+    }
+
+    giveaway.paused = true;
+    return { success: true };
+  }
+
   async execute({ client, message, args }) {
     if (!args[0]) {
       return message.channel.send("Please provide the message ID of the giveaway to pause.");
     }
 
     const messageId = args[0];
+    const result = this._doPause(client, messageId);
 
-    try {
-      await client.giveawaysManager.pause(messageId);
-      return message.channel.send(`Giveaway with ID \`${messageId}\` has been paused successfully.`);
-    } catch (error) {
-      return message.channel.send(`Failed to pause the giveaway. Make sure the message ID is correct and the giveaway is active.`);
+    if (!result.success) {
+      return message.channel.send(`❌ ${result.reason}`);
     }
+
+    return message.channel.send(`⏸️ Giveaway \`${messageId}\` has been paused. New entries will be rejected until resumed.`);
   }
 
   async slashExecute({ client, interaction }) {
     const messageId = interaction.options.getString("message_id");
+    const result = this._doPause(client, messageId);
 
-    try {
-      await client.giveawaysManager.pause(messageId);
-      return interaction.reply(`Giveaway with ID \`${messageId}\` has been paused successfully.`);
-    } catch (error) {
-      return interaction.reply(`Failed to pause the giveaway. Make sure the message ID is correct and the giveaway is active.`);
+    if (!result.success) {
+      return interaction.reply({ content: `❌ ${result.reason}`, ephemeral: true });
     }
+
+    return interaction.reply(`⏸️ Giveaway \`${messageId}\` has been paused. New entries will be rejected until resumed.`);
   }
 }
 

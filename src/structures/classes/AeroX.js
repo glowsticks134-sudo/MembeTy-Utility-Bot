@@ -69,6 +69,9 @@ export class AeroX extends Client {
                 this.eventHandler = new EventLoader(this);
                 this.noPrefixUsers = new Set();
 
+                // Active giveaways store: messageId -> { prize, winnersCount, endTime, host, participants, collector, channelId, guildId, paused }
+                this.giveaways = new Map();
+
                 this.startTime = Date.now();
                 this.rest = new REST({ version: '10' }).setToken(config.token);
         }

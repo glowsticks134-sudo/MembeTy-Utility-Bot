@@ -50,6 +50,46 @@ class GiveawayEditCommand extends Command {
     });
   }
 
+  _doEdit(client, messageId, option, value) {
+    const giveaway = client.giveaways.get(messageId);
+
+    if (!giveaway) {
+      return { success: false, reason: "No active giveaway found with that message ID." };
+    }
+
+    if (giveaway.ended) {
+      return { success: false, reason: "This giveaway has already ended and cannot be edited." };
+    }
+
+    switch (option) {
+      case "time": {
+        const addTime = ms(value);
+        if (!addTime) {
+          return { success: false, reason: "Invalid time format. Use formats like 1h, 30m, 1d." };
+        }
+        giveaway.endTime += addTime;
+        return { success: true, detail: `Added ${value} to the giveaway duration.` };
+      }
+      case "winners": {
+        const winnerCount = parseInt(value);
+        if (isNaN(winnerCount) || winnerCount < 1 || winnerCount > 20) {
+          return { success: false, reason: "Winner count must be a number between 1 and 20." };
+        }
+        giveaway.winnersCount = winnerCount;
+        return { success: true, detail: `Winner count updated to ${winnerCount}.` };
+      }
+      case "prize": {
+        if (!value || value.length < 1 || value.length > 256) {
+          return { success: false, reason: "Prize must be between 1 and 256 characters." };
+        }
+        giveaway.prize = value;
+        return { success: true, detail: `Prize updated to: ${value}` };
+      }
+      default:
+        return { success: false, reason: "Invalid option. Use: time, winners, or prize." };
+    }
+  }
+
   async execute({ client, message, args }) {
     if (!args[0]) {
       return message.channel.send("Please provide the message ID of the giveaway to edit.");
@@ -67,36 +107,13 @@ class GiveawayEditCommand extends Command {
     const option = args[1].toLowerCase();
     const value = args.slice(2).join(" ");
 
-    try {
-      let editOptions = {};
+    const result = this._doEdit(client, messageId, option, value);
 
-      switch (option) {
-        case "time":
-          const addTime = ms(value);
-          if (!addTime) {
-            return message.channel.send("Invalid time format. Use formats like 1h, 30m, 1d.");
-          }
-          editOptions.addTime = addTime;
-          break;
-        case "winners":
-          const winnerCount = parseInt(value);
-          if (isNaN(winnerCount) || winnerCount < 1) {
-            return message.channel.send("Winner count must be a valid number greater than 0.");
-          }
-          editOptions.newWinnerCount = winnerCount;
-          break;
-        case "prize":
-          editOptions.newPrize = value;
-          break;
-        default:
-          return message.channel.send("Invalid option. Use: time, winners, or prize.");
-      }
-
-      await client.giveawaysManager.edit(messageId, editOptions);
-      return message.channel.send(`Giveaway with ID \`${messageId}\` has been edited successfully.`);
-    } catch (error) {
-      return message.channel.send(`Failed to edit the giveaway. Make sure the message ID is correct and the giveaway exists.`);
+    if (!result.success) {
+      return message.channel.send(`❌ ${result.reason}`);
     }
+
+    return message.channel.send(`✅ Giveaway \`${messageId}\` updated. ${result.detail}`);
   }
 
   async slashExecute({ client, interaction }) {
@@ -104,34 +121,13 @@ class GiveawayEditCommand extends Command {
     const option = interaction.options.getString("option");
     const value = interaction.options.getString("value");
 
-    try {
-      let editOptions = {};
+    const result = this._doEdit(client, messageId, option, value);
 
-      switch (option) {
-        case "time":
-          const addTime = ms(value);
-          if (!addTime) {
-            return interaction.reply("Invalid time format. Use formats like 1h, 30m, 1d.");
-          }
-          editOptions.addTime = addTime;
-          break;
-        case "winners":
-          const winnerCount = parseInt(value);
-          if (isNaN(winnerCount) || winnerCount < 1) {
-            return interaction.reply("Winner count must be a valid number greater than 0.");
-          }
-          editOptions.newWinnerCount = winnerCount;
-          break;
-        case "prize":
-          editOptions.newPrize = value;
-          break;
-      }
-
-      await client.giveawaysManager.edit(messageId, editOptions);
-      return interaction.reply(`Giveaway with ID \`${messageId}\` has been edited successfully.`);
-    } catch (error) {
-      return interaction.reply(`Failed to edit the giveaway. Make sure the message ID is correct and the giveaway exists.`);
+    if (!result.success) {
+      return interaction.reply({ content: `❌ ${result.reason}`, ephemeral: true });
     }
+
+    return interaction.reply(`✅ Giveaway \`${messageId}\` updated. ${result.detail}`);
   }
 }
 

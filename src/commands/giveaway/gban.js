@@ -95,8 +95,8 @@ class GiveawayBanCommand extends Command {
       const expiresAt = Date.now() + duration.milliseconds;
       
       this.bannedUsers.set(banKey, {
-        odId: message.guild.id,
-        odId: userId,
+        guildId: message.guild.id,
+        userId: userId,
         expiresAt: expiresAt,
         bannedBy: message.author.id
       });
