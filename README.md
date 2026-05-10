@@ -47,11 +47,5 @@ This project is licensed under a custom agreement. It is free for **personal, no
 
 ## 🙌 Credits
 
-- **Developers**: Shinchan & **AeroX Development**
-- **Base Code**: This project uses [Yukihana](https://github.com/bre4d777/Yukihana) by **bre4d777** as its foundation.
-
+- **Developers**: **Stichachu13**
 ---
-
-### 📞 Support
-
-Join our support server for help and updates: [discord.gg/aerox](https://discord.gg/aerox)
