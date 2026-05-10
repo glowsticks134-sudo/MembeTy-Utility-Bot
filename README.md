@@ -1,7 +1,7 @@
 # Utlility Bot - Ultimate Discord Bot
 
-Utility Bot is a feature-rich Discord bot built with **discord.js v14**, featuring advanced hybrid sharding for scalability, high-quality music streaming via Lavalink, and a modular hields.io/discord/1070267471958614057?color=7289da&label=Support%20Server&logo=discord)](https://discord.gg/aerox)
-
+Utility Bot is a feature-rich Discord bot built with **discord.js v14**, featuring advanced hybrid sharding for scalability, high-quality music streaming via Lavalink, and a modular hields.
+___
 ## 🚀 Features
 
 - **Multi-Platform Music**: Play music from YouTube, Spotify, Apple Music, and SoundCloud.
